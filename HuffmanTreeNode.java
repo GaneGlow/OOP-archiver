@@ -4,6 +4,11 @@ public class HuffmanTreeNode implements Comparable<HuffmanTreeNode>{
     HuffmanTreeNode left;
     HuffmanTreeNode right;
 
+    public HuffmanTreeNode(byte code, int frequency) {
+        this.code = code;
+        this.frequency = frequency;
+    }
+
     public HuffmanTreeNode(int frequency, HuffmanTreeNode left, HuffmanTreeNode right) {
         this.frequency = frequency;
         this.left = left;
