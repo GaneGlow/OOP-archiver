@@ -28,7 +28,7 @@ public class HuffmanTree {
             return;
         }
         if (node.isLeaf()) {
-            codes.put(node.code, code.isEmpty() ? "0" : code);
+            codes.put(node.byteCode, code.isEmpty() ? "0" : code);
         }
         else {
             codeGeneratorRec(node.left, code + "0", codes);
