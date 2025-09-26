@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 
@@ -20,5 +21,24 @@ public class HuffmanTree {
         }
 
         return queue.poll();
+    }
+
+    private static void codeGeneratorRec(HuffmanTreeNode node, String code, Map<Byte, String> codes) {
+        if (node == null) {
+            return;
+        }
+        if (node.isLeaf()) {
+            codes.put(node.code, code.isEmpty() ? "0" : code);
+        }
+        else {
+            codeGeneratorRec(node.left, code + "0", codes);
+            codeGeneratorRec(node.right, code + "1", codes);
+        }
+    }
+
+    public static Map<Byte, String> codeGenerator(HuffmanTreeNode root) {
+        Map<Byte, String> codes = new HashMap<>();
+        codeGeneratorRec(root, "", codes);
+        return codes;
     }
 }
