@@ -37,9 +37,17 @@ public class Archiver {
         return data;
     }
 
-    public static void compress(String inputFile, String outputFile) throws FileNotFoundException {
+    public static void compress(String inputFile, String outputFile) throws IOException {
         byte[] data = readFile(inputFile);
 
+        Map<Byte, Integer> frequency = frequencyMap(data);
 
+        HuffmanTreeNode root = HuffmanTree.buildTree(frequency);
+
+        Map<Byte, String> huffmanCodes = HuffmanTree.codeGenerator(root);
+
+        String encodeData = DataCoder.encode(data, huffmanCodes);
+
+        writeCompressFile(outputFile, encodeData, data.length);
     }
 }
