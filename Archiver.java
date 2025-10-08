@@ -14,10 +14,22 @@ public class Archiver {
         return frequency;
     }
 
-    private static void writeCompressFile(String outputFile, String encodeData, int origSize) throws IOException {
+    private static void writeCompressFile(String outputFile, String encodeData,
+                                          int origSize, Map<Byte, String> huffmanCodes) throws IOException {
 
         try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(outputFile))) {
             dos.writeInt(origSize);
+
+            dos.writeInt(huffmanCodes.size());
+
+            for (Map.Entry<Byte, String> huffmanCode : huffmanCodes.entrySet()) {
+                dos.writeByte(huffmanCode.getKey());
+                String code = huffmanCode.getValue();
+                dos.writeByte(code.length());
+                for (char c : code.toCharArray()) {
+                    dos.writeBoolean(c == '1');
+                }
+            }
 
             for (char c : encodeData.toCharArray()) {
                 dos.writeBoolean(c == '1');
@@ -25,15 +37,12 @@ public class Archiver {
         }
     }
 
-    private static byte[] readFile(String fileName) throws FileNotFoundException {
+    private static byte[] readFile(String fileName) throws IOException {
         File file = new File(fileName);
         byte[] data = new byte[(int) file.length()];
         try (FileInputStream fis = new FileInputStream(file)) {
             fis.read(data);//?
-        } catch (IOException e) {
-            throw new FileNotFoundException();
         }
-
         return data;
     }
 
@@ -48,6 +57,34 @@ public class Archiver {
 
         String encodeData = DataCoder.encode(data, huffmanCodes);
 
-        writeCompressFile(outputFile, encodeData, data.length);
+        writeCompressFile(outputFile, encodeData, data.length, huffmanCodes);
+    }
+
+    private static void writeDecompressFile(String file, byte[] data) throws IOException{
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(data);
+        }
+    }
+
+    public static void decompress(String inputFile, String outputFile) throws IOException{
+        try (DataInputStream dis = new DataInputStream(new FileInputStream(inputFile))) {
+
+            int origSize = dis.readInt();
+            int codesSize = dis.readInt();
+
+            Map<String, Byte> huffmanCodes = new HashMap<>();
+            for (int i = 0; i < codesSize; i++) {
+                byte character = dis.readByte();
+                int codeLength = dis.readByte();
+                StringBuilder code =new StringBuilder();
+                for (int j = 0; j < codeLength; j++) {
+                    code.append(dis.readBoolean() ? '1' : '0');
+                }
+                huffmanCodes.put(code.toString(), character);
+            }
+            byte[] decodeData = DataCoder.decode(dis, huffmanCodes, origSize);
+
+            writeDecompressFile(outputFile, decodeData);
+        }
     }
 }
