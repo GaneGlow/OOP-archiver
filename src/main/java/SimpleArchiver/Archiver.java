@@ -31,13 +31,39 @@ public class Archiver extends HuffmanTree {
                 dos.writeByte(huffmanCode.getKey());
                 String code = huffmanCode.getValue();
                 dos.writeByte(code.length());
-                for (char c : code.toCharArray()) {
+                /*for (char c : code.toCharArray()) {
                     dos.writeBoolean(c == '1');
                 }
             }
 
             for (char c : encodeData.toCharArray()) {
                 dos.writeBoolean(c == '1');
+            }
+        }*/
+                dos.writeUTF(code);
+            }
+
+            int bitLength = encodeData.length();
+            dos.writeInt(bitLength);
+
+            byte currentByte = 0;
+            int bitCount = 0;
+
+            for (int i = 0; i < bitLength; i++) {
+                char bitChar = encodeData.charAt(i);
+                if (bitChar == '1') {
+                    currentByte |= (byte) (1 << (7 - bitCount));
+                }
+                bitCount++;
+
+                if (bitCount == 8) {
+                    dos.writeByte(currentByte);
+                    currentByte = 0;
+                    bitCount = 0;
+                }
+            }
+            if (bitCount > 0) {
+                dos.writeByte(currentByte);
             }
         }
     }
@@ -81,14 +107,35 @@ public class Archiver extends HuffmanTree {
             for (int i = 0; i < codesSize; i++) {
                 byte character = dis.readByte();
                 int codeLength = dis.readByte();
-                StringBuilder code =new StringBuilder();
-                for (int j = 0; j < codeLength; j++) {
+                //StringBuilder code =new StringBuilder();
+                /*for (int j = 0; j < codeLength; j++) {
                     code.append(dis.readBoolean() ? '1' : '0');
-                }
-                huffmanCodes.put(code.toString(), character);
-            }
-            byte[] decodeData = DataCoder.decode(dis, huffmanCodes, origSize);
+                }*/
 
+                String code = dis.readUTF();
+                huffmanCodes.put(code, character);
+            }
+
+            int bitLength = dis.readInt();
+
+            StringBuilder encodedData = new StringBuilder();
+            int totalBytes = (bitLength + 7) / 8;
+
+            for (int i = 0; i < totalBytes; i++) {
+                byte currentByte = dis.readByte();
+                int bitsInThisByte = (i == totalBytes - 1) ?
+                        bitLength - (i * 8) : 8;
+
+                for (int j = 0; j < bitsInThisByte; j++) {
+                    if ((currentByte & (1 << (7 - j))) != 0) {
+                        encodedData.append('1');
+                    } else {
+                        encodedData.append('0');
+                    }
+                }
+            }
+
+            byte[] decodeData = DataCoder.decode(encodedData.toString(), huffmanCodes, origSize);
             writeDecompressFile(outputFile, decodeData);
         }
     }
