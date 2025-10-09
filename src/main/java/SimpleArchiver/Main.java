@@ -1,13 +1,16 @@
 package SimpleArchiver;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
 
     public static class CmdParams {
-        public String inputFile;
+        public String[] inputFiles;
         public String outputFile;
         public boolean compress;
+        public boolean multiFile;
         public boolean decompress;
         public boolean error;
         public boolean help;
@@ -20,25 +23,45 @@ public class Main {
                 params.help = true;
                 return params;
             }
-            if (!args[0].equals("-d") && !args[0].equals("-c")) {
+            if (!args[0].equals("-d") && !args[0].equals("-c") && !args[0].equals("-m")) {
                 params.error = true;
                 params.help = true;
-                return params;
-            }
-            if (args[0].equals("-d")) {
-                params.decompress = true;
-            } else {
-                params.compress = true;
-            }
-            if (args.length < 2) {
-                params.help = true;
-                params.error = true;
                 return params;
             }
 
-            params.inputFile = args[1];
-            if (args.length > 2) {
-                params.outputFile = args[2];
+            if (args[0].equals("-d")) {
+                params.decompress = true;
+                if (args.length >= 3) {
+                    params.inputFiles = new String[]{args[1]};
+                    params.outputFile = args[2];
+                } else {
+                    params.error = true;
+                    params.help = true;
+                }
+            } else if (args[0].equals("-c")) {
+                params.compress = true;
+                if (args.length >= 3) {
+                    params.inputFiles = new String[]{args[1]};
+                    params.outputFile = args[2];
+                } else {
+                    params.error = true;
+                    params.help = true;
+                }
+            } else {
+                params.compress = true;
+                params.multiFile = true;
+
+                if (args.length >= 3) {
+                    List<String> inputFilesList = new ArrayList<>();
+                    for (int i = 1; i < args.length - 1; i++) {
+                        inputFilesList.add(args[i]);
+                    }
+                    params.inputFiles = inputFilesList.toArray(new String[0]);
+                    params.outputFile = args[args.length - 1];
+                } else {
+                    params.error = true;
+                    params.help = true;
+                }
             }
         } else {
             params.help = true;
@@ -52,19 +75,43 @@ public class Main {
         if (params.help) {
             PrintStream out = params.error ? System.err : System.out;
             out.println("Usage:");
-            out.println("  <cmd> args <input-file> (<output-file>)");
-            out.println("    -d  // decompress file");
-            out.println("    -c  // compress file");
-            out.println("  <cmd> --help");
+            out.println("  <cmd> -c <input-file> <output-file>           // compress one file");
+            out.println("  <cmd> -m <file1> <file2> ... <output-folder>  // compress several files to folder archive");
+            out.println("  <cmd> -m <folder> <output-folder>             // compress folder to archive");
+            out.println("  <cmd> -d <input-folder> <output-folder>       // decompress folder archive");
+            out.println("  --help                                        // short instructions");
+            /*out.println("");
+            out.println("Examples:");
+            out.println("  archiver -c document.txt document.huf");
+            out.println("  archiver -m file1.txt file2.jpg file3.doc archive_folder");
+            out.println("  archiver -m myfolder archive_folder");
+            out.println("  archiver -d archive_folder extracted_files");*/
             System.exit(params.error ? 1 : 0);
         }
-            if (params.compress) {
-                Archiver.compress(args[1], args[2]);
-                System.out.println("Archiving completed successfully!");
+
+        if (params.compress) {
+            if (params.multiFile) {
+                if (params.inputFiles.length == 1) {
+                    java.io.File file = new java.io.File(params.inputFiles[0]);
+                    if (file.isDirectory()) {
+                        FolderFileArchiver.compressFolder(params.inputFiles[0], params.outputFile);
+                        System.out.println("Folder archiving completed successfully!");
+                    } else {
+                        FolderFileArchiver.compressFiles(params.inputFiles, params.outputFile);
+                        System.out.println("Files archiving completed successfully!");
+                    }
+                } else {
+                    FolderFileArchiver.compressFiles(params.inputFiles, params.outputFile);
+                    System.out.println("Files archiving completed successfully!");
+                }
+            } else {
+                Archiver.compress(params.inputFiles[0], params.outputFile);
+                System.out.println("File archiving completed successfully!");
             }
-            if (params.decompress) {
-                Archiver.decompress(args[1], args[2]);
-                System.out.println("Unpacking completed successfully!");
-            }
+        }
+        if (params.decompress) {
+            FolderFileArchiver.decompressFolder(params.inputFiles[0], params.outputFile);
+            System.out.println("Folder unpacking completed successfully!");
+        }
     }
 }
