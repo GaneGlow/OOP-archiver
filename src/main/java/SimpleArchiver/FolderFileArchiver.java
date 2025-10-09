@@ -53,6 +53,65 @@ public class FolderFileArchiver {
         System.out.println("Total files compressed: " + manifestLines.size());
     }
 
+    public static void compressFiles(String[] inputFiles, String outputFolderPath) throws IOException {
+        File outputFolder = new File(outputFolderPath);
+
+        if (!outputFolder.exists()) {
+            outputFolder.mkdirs();
+        }
+
+        File manifestFile = new File(outputFolder, "manifest.mf");
+        List<String> manifestLines = new ArrayList<>();
+
+        for (String inputFile : inputFiles) {
+            File file = new File(inputFile);
+            if (!file.exists()) {
+                System.err.println("Warning: File does not exist - " + inputFile);
+                continue;
+            }
+
+            if (file.isFile()) {
+                String fileName = file.getName();
+                String compressedFileName = generateCompressedFileName(fileName);
+                File compressedFile = new File(outputFolder, compressedFileName);
+
+                Archiver.compress(file.toString(), compressedFile.toString());
+
+                manifestLines.add(fileName + "|" + compressedFileName + "|" + file.length());
+
+                System.out.println("Compressed: " + fileName + " -> " + compressedFileName);
+            } else if (file.isDirectory()) {
+                Files.walkFileTree(file.toPath(), new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                        if (path.toFile().isFile()) {
+                            String relativePath = file.toPath().relativize(path).toString();
+                            String compressedFileName = generateCompressedFileName(relativePath);
+                            File compressedFile = new File(outputFolder, compressedFileName);
+
+                            Archiver.compress(path.toString(), compressedFile.toString());
+
+                            manifestLines.add(relativePath + "|" + compressedFileName + "|" + path.toFile().length());
+
+                            System.out.println("Compressed: " + relativePath + " -> " + compressedFileName);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            }
+        }
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(manifestFile))) {
+            writer.println("# Multi-file archive manifest");
+            writer.println("# Format: original_path|compressed_filename|original_size");
+            for (String line : manifestLines) {
+                writer.println(line);
+            }
+        }
+
+        System.out.println("Total files compressed: " + manifestLines.size());
+    }
+
     public static void decompressFolder(String inputFolderPath, String outputFolderPath) throws IOException {
         File inputFolder = new File(inputFolderPath);
         File outputFolder = new File(outputFolderPath);
