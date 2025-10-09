@@ -1,8 +1,13 @@
+package SimpleArchiver;
+
+import HuffmanTree.HuffmanTree;
+import HuffmanTree.HuffmanTreeNode;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Archiver {
+public class Archiver extends HuffmanTree {
 
     private static Map<Byte, Integer> frequencyMap(byte[] data) {
         Map<Byte, Integer> frequency = new HashMap<>();
@@ -51,9 +56,9 @@ public class Archiver {
 
         Map<Byte, Integer> frequency = frequencyMap(data);
 
-        HuffmanTreeNode root = HuffmanTree.buildTree(frequency);
+        HuffmanTreeNode root = buildTree(frequency);
 
-        Map<Byte, String> huffmanCodes = HuffmanTree.codeGenerator(root);
+        Map<Byte, String> huffmanCodes = codeGenerator(root);
 
         String encodeData = DataCoder.encode(data, huffmanCodes);
 

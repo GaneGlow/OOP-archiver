@@ -1,3 +1,5 @@
+package SimpleArchiver;
+
 import java.io.PrintStream;
 
 public class Main {

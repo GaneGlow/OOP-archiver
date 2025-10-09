@@ -1,3 +1,5 @@
+package HuffmanTree;
+
 public class HuffmanTreeNode implements Comparable<HuffmanTreeNode>{
     int frequency;
     byte byteCode;
