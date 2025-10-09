@@ -53,6 +53,60 @@ public class FolderFileArchiver {
         System.out.println("Total files compressed: " + manifestLines.size());
     }
 
+    public static void decompressFolder(String inputFolderPath, String outputFolderPath) throws IOException {
+        File inputFolder = new File(inputFolderPath);
+        File outputFolder = new File(outputFolderPath);
+
+        if (!inputFolder.exists() || !inputFolder.isDirectory()) {
+            throw new IOException("Input archive folder does not exist: " + inputFolderPath);
+        }
+
+        if (!outputFolder.exists()) {
+            outputFolder.mkdirs();
+        }
+
+        File manifestFile = new File(inputFolder, "manifest.mf");
+        if (!manifestFile.exists()) {
+            throw new IOException("Manifest file not found in archive folder: " + manifestFile.getPath());
+        }
+
+        List<String> manifestLines = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(manifestFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.startsWith("#") && !line.trim().isEmpty()) {
+                    manifestLines.add(line);
+                }
+            }
+        }
+
+        int restoredCount = 0;
+        for (String line : manifestLines) {
+            String[] parts = line.split("\\|");
+            if (parts.length >= 2) {
+                String originalPath = parts[0];
+                String compressedFileName = parts[1];
+
+                File compressedFile = new File(inputFolder, compressedFileName);
+                File outputFile = new File(outputFolder, originalPath);
+
+                if (!compressedFile.exists()) {
+                    System.err.println("Warning: Compressed file not found - " + compressedFileName);
+                    continue;
+                }
+
+                outputFile.getParentFile().mkdirs();
+
+                Archiver.decompress(compressedFile.toString(), outputFile.toString());
+                restoredCount++;
+
+                System.out.println("Decompressed: " + compressedFileName + " -> " + originalPath);
+            }
+        }
+
+        System.out.println("Total files decompressed: " + restoredCount);
+    }
+
     private static String generateCompressedFileName(String originalName) {
         String safeName = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
         return safeName + ".huf";
