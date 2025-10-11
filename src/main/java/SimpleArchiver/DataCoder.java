@@ -1,8 +1,6 @@
 package SimpleArchiver;
 
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.util.Map;
 
@@ -20,15 +18,6 @@ public class DataCoder {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         StringBuilder currCode = new StringBuilder();
 
-        /*while (baos.size() < origSize) {
-            boolean bit = dataInputStream.readBoolean();
-            currCode.append(bit ? "1" : "0");
-
-            if (huffmanCodes.containsKey(currCode.toString())) {
-                baos.write(huffmanCodes.get(currCode.toString()));
-                currCode.setLength(0);
-            }
-        }*/
         for (int i = 0; i < encodedData.length(); i++) {
             currCode.append(encodedData.charAt(i));
 

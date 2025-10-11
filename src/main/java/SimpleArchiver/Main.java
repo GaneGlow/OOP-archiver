@@ -80,12 +80,7 @@ public class Main {
             out.println("  <cmd> -m <folder> <output-folder>             // compress folder to archive");
             out.println("  <cmd> -d <input-folder> <output-folder>       // decompress folder archive");
             out.println("  --help                                        // short instructions");
-            /*out.println("");
-            out.println("Examples:");
-            out.println("  archiver -c document.txt document.huf");
-            out.println("  archiver -m file1.txt file2.jpg file3.doc archive_folder");
-            out.println("  archiver -m myfolder archive_folder");
-            out.println("  archiver -d archive_folder extracted_files");*/
+
             System.exit(params.error ? 1 : 0);
         }
 

@@ -106,11 +106,6 @@ public class Archiver extends HuffmanTree {
             Map<String, Byte> huffmanCodes = new HashMap<>();
             for (int i = 0; i < codesSize; i++) {
                 byte character = dis.readByte();
-                int codeLength = dis.readByte();
-                //StringBuilder code =new StringBuilder();
-                /*for (int j = 0; j < codeLength; j++) {
-                    code.append(dis.readBoolean() ? '1' : '0');
-                }*/
 
                 String code = dis.readUTF();
                 huffmanCodes.put(code, character);
